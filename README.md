@@ -19,12 +19,18 @@ make
     * python 3
 * Database configuration
 * How to run tests
+    ```bash
+    make clean init test
+    ```
 * Deployment instructions
 
 ### Contribution guidelines ###
 
 * Writing tests
+    * Tests are written with [pytest](https://docs.pytest.org/en/latest/)
+    * All major functions/methods should be tested
 * Code review
+    * All changes are incorporated into `master` via a pull request
 * Other guidelines
 
 ### Who do I talk to? ###
