@@ -1,4 +1,5 @@
 import logging
+import os
 
 import boto3
 import pandas as pd
@@ -31,6 +32,10 @@ class DataLake:
         """
         path = "alphavantage/{}/data.csv".format(symbol.upper())
         output = "/tmp/{}.csv".format(path.replace("/", "_"))
+
+        if os.path.isfile(output):
+            log.info("existing file for '{}' was found, removing".format(symbol))
+            os.remove(output)
 
         try:
             self.client.Bucket(DATALAKE).download_file(path, output)
