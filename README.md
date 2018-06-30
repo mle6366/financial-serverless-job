@@ -9,9 +9,14 @@ The Path to Bebop: Financial Portfolio Planning & Management Tools.
 
 ### How do I get set up? ###
 
-* Summary of set up
-* Configuration
-* Dependencies
+```
+git clone https://meghane@bitbucket.org/meghane/the_path_to_bebop.git
+cd the_path_to_bebop
+make
+
+```
+* Dependencies: 
+    * python 3
 * Database configuration
 * How to run tests
 * Deployment instructions
