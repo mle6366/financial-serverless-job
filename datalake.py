@@ -1,4 +1,3 @@
-import datetime
 import logging
 import os
 
@@ -15,12 +14,19 @@ class DataLake:
     Provides methods for interacting with the files of the DataLake.
     """
 
-    def __init__(self, client=None):
+    def __init__(self, date_range, client=None):
+        """
+        Creates an instance of DataLake.
+
+        :param date_range: (DatetimeIndex) for bounding data
+
+        :param client: boto3 client (only used in testing)
+        """
         # If we are no provided a client, create a default
         if client is None:
             client = boto3.resource("s3", region_name="us-west-2")
-
         self.client = client
+        self.date_range = date_range
 
     @timing
     def _get_datalake_file(self, path):
@@ -83,7 +89,9 @@ class DataLake:
                              index_col="timestamp",
                              parse_dates=True,
                              na_values=["nan"])
-        return df
+
+        result_frame = pd.DataFrame(index=self.date_range)
+        return result_frame.join(df)
 
     @timing
     def get_holding(self, symbol):
@@ -100,7 +108,8 @@ class DataLake:
                          index_col="timestamp",
                          parse_dates=True,
                          na_values=["nan"])
-        return df
+        result_frame = pd.DataFrame(index=self.date_range)
+        return result_frame.join(df)
 
     @timing
     def get_holdings(self):
@@ -109,8 +118,7 @@ class DataLake:
 
         :return: DataFrame
         """
-        date_idx = pd.date_range("2018-07-01", "{0:%Y-%m-%d}".format(datetime.datetime.now()))
-        result_frame = pd.DataFrame(index=date_idx)
+        result_frame = pd.DataFrame(index=self.date_range)
 
         objs = self.client.Bucket(DATALAKE).objects.all()
         for obj in filter(lambda obj: "personal-capital/holdings/" in obj.key, objs):
