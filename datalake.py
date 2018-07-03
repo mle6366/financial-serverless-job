@@ -112,13 +112,15 @@ class DataLake:
         return result_frame.join(df)
 
     @timing
-    def get_holdings(self):
+    def get_holdings(self, date_range=None, ascending=False):
         """
         Retrieves all holding data from the DataLake and joins as a single DataFrame.
 
         :return: DataFrame
         """
-        result_frame = pd.DataFrame(index=self.date_range)
+        result_frame = pd.DataFrame(
+            index=self.date_range if date_range is None else date_range
+        )
 
         objs = self.client.Bucket(DATALAKE).objects.all()
         for obj in filter(lambda obj: "personal-capital/holdings/" in obj.key, objs):
@@ -132,4 +134,5 @@ class DataLake:
 
             result_frame = result_frame.join(df)
 
+        result_frame.sort_index(ascending=ascending, inplace=True)
         return result_frame
