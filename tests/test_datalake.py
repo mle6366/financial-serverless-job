@@ -104,10 +104,10 @@ class TestDataLake(unittest.TestCase):
             hold.put(Body=open("tests/data/holdings/{}.csv".format(s), "rb"))
 
         dl = DataLake(date_range=self.date_range)
-        df = dl.get_holdings()
+        df = dl.get_holdings(ascending=True)
         self.assertIsNotNone(df)
 
-        # must be 3 rows and 3 column
+        # must be 4 rows and 3 column
         self.assertEqual(4, df.values.shape[0])
         self.assertEqual(3, df.values.shape[1])
         # assert AMZN
@@ -125,3 +125,27 @@ class TestDataLake(unittest.TestCase):
         self.assertEqual(float(10), df.values[1, 2])
         self.assertEqual(float(10), df.values[2, 2])
         self.assertEqual(float(10), df.values[3, 2])
+
+    @mock_s3
+    def test_get_holdings_date(self):
+        ### Setup virtual S3 data ###
+        conn = boto3.resource("s3", region_name="us-west-2")
+        conn.create_bucket(Bucket=BUCKET)
+
+        for s in ["AMZN", "GOOG", "NVDA"]:
+            hold = conn.Object(BUCKET, "personal-capital/holdings/{}.csv".format(s))
+            hold.put(Body=open("tests/data/holdings/{}.csv".format(s), "rb"))
+
+        dl = DataLake(date_range=pd.date_range("2018-07-01", "2018-07-01"))
+        df = dl.get_holdings()
+        self.assertIsNotNone(df)
+
+        # must be 1 rows and 3 column
+        self.assertEqual(1, df.values.shape[0])
+        self.assertEqual(3, df.values.shape[1])
+        # assert AMZN
+        self.assertTrue(math.isnan(df.values[0, 0]))
+        # assert GOOG
+        self.assertEqual(float(5), df.values[0, 1])
+        # assert NVDA
+        self.assertEqual(float(10), df.values[0, 2])
