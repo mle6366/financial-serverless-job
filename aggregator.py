@@ -1,9 +1,13 @@
 import pandas as pd
-import numpy as np
-import time
+
+from datalake import DataLake
 
 
 class Aggregator:
+    def __init__(self, datalake_client=None):
+        if datalake_client is None:
+            datalake_client = DataLake()
+        self.datalake_client = datalake_client
 
     def get_date_range(self, start_date, end_date):
         """Define and Return the Pandas DateTimeIndex"""
@@ -11,7 +15,6 @@ class Aggregator:
         return date_range
 
     def build_portfolio(self, date_time_index):
-        'TODO Call Ryans Client'
         symbols = list(self.get_holdings(date_time_index).columns.values)
         cols = ['timestamp', 'close']
         df = self.get_starter_dataframe(date_time_index, cols)
@@ -19,24 +22,39 @@ class Aggregator:
         for symbol in symbols:
             if symbol == 'timestamp' or symbol == 'SPY':
                 continue
-            df_tmp = self.get_stock_data(symbol, cols)
+            df_tmp = self.datalake_client.get_stock(symbol, date_time_index, cols)
             df_tmp = df_tmp.rename(columns={'close': symbol})
             df = df.join(df_tmp)
-        self.calculate_allocations(df)
-        return df
+        holdings_vals = self.calculate_position_values(df, date_time_index)
+        portfolio_val = self.calculate_total_portfolio_val(holdings_vals)
+        return portfolio_val
 
-    def get_starter_dataframe(self, date_time_index, cols):
-        """Returns a dataframe constrained by S&P500 trade days,
-            thus omitting holidays/weekends"""
+    def get_starter_dataframe(self, date_time_index, cols=None):
+        """
+        Returns a dataframe constrained by S&P500 trade days,
+        thus omitting holidays/weekends.
+
+        :param date_time_index: (DatetimeIndex) for bounding timeseries
+
+        :param columns: (list of string) columns to include in dataframe, must include index
+
+        """
         df = pd.DataFrame(index=date_time_index)
-        df_spy = self.get_stock_data('SPY', cols)
+        df_spy = self.datalake_client.get_stock('SPY', date_time_index, cols)
         return df.join(df_spy).dropna()
 
-    def normalize_portfolio(self, df):
+    def normalize(self, df):
         """divide each value in the df by day 1 (row 0)"""
         return df/df.ix[0]
 
-    def calculate_allocations(self, df):
+    def calculate_position_values(self, df, date_time_index):
+        """ TODO: Use the date_time_index from the incoming dataframe"""
+        df = df.sort_index(ascending=False).drop(columns='SPY') # we dont have SPY holdings
+        holdings = self.get_holdings(date_time_index)
+        result = df.mul(holdings)
+        return result
+
+    def calculate_allocation_percentages(self, df):
         """To Revisit: Calculate based off Cash as well, not just investments"""
         df = df.sort_index(ascending=False).head(1)
         date_range = self.get_date_range(df.index[0], df.index[0])
@@ -46,20 +64,11 @@ class Aggregator:
         allocs = test.div(total_value, axis=1)
         print('did this add to: {}'.format(allocs.ix[0].sum()))
 
-    def get_holdings(self, date_time_index=None):
-        df = pd.DataFrame(index=date_time_index)
-        df2 = pd.read_csv("tests/data/holdings.csv",
-                           index_col='timestamp',
-                           parse_dates=True,
-                           na_values=['nan'])
-        df = df.join(df2)
-        df.sort_index(ascending=False, inplace=True)
-        return df
+    def calculate_total_portfolio_val(self, df):
+        return df.sum(axis=1)
 
-    def get_stock_data(self, stock, columns):
-        df_temp = pd.read_csv("tests/data/{}.csv".format(stock),
-                              index_col='timestamp',
-                              parse_dates=True,
-                              na_values=['nan'],
-                              usecols=columns)
-        return df_temp
+    def get_holdings(self, date_time_index):
+        df = self.datalake_client.get_holdings(date_time_index)
+        start_df = self.get_starter_dataframe(date_time_index, cols=['timestamp', 'high'])
+        return start_df.join(df).drop(columns=['high'])
+
