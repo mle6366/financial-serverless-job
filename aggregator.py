@@ -1,5 +1,7 @@
 import pandas as pd
 
+import logging
+import time
 from datalake import DataLake
 
 
@@ -22,11 +24,19 @@ class Aggregator:
         for symbol in symbols:
             if symbol == 'timestamp' or symbol == 'SPY':
                 continue
+            logging.info("{} || Aggregator || "
+                         "Searching for Stock {}"
+                         .format(time.asctime(time.localtime(time.time())), symbol))
             df_tmp = self.datalake_client.get_stock(symbol, date_time_index, cols)
+            if self.is_invalid_dataframe(df_tmp, symbol):
+                continue
             df_tmp = df_tmp.rename(columns={'close': symbol})
             df = df.join(df_tmp)
         holdings_vals = self.calculate_position_values(df, date_time_index)
         portfolio_val = self.calculate_total_portfolio_val(holdings_vals)
+        print(portfolio_val)
+        logging.info(portfolio_val.values)
+        logging.info(holdings_vals)
         return portfolio_val
 
     def get_starter_dataframe(self, date_time_index, cols=None):
@@ -69,6 +79,15 @@ class Aggregator:
 
     def get_holdings(self, date_time_index):
         df = self.datalake_client.get_holdings(date_time_index)
-        start_df = self.get_starter_dataframe(date_time_index, cols=['timestamp', 'high'])
-        return start_df.join(df).drop(columns=['high'])
+        if self.is_invalid_dataframe(df):
+            return None
+        start_df = self.get_starter_dataframe(date_time_index, cols=['timestamp', 'close'])
+        return start_df.join(df).drop(columns=['close'])
 
+    def is_invalid_dataframe(self, df, symbol=None):
+        if df.empty:
+            logging.error("{} : Aggregator.py:Cannot load Holdings for {}. "
+                          .format(time.asctime(time.localtime(time.time())),
+                                  symbol if symbol is not None else "No Symbol Info"))
+
+        return df.empty

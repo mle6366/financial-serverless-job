@@ -111,7 +111,7 @@ class DataLake:
 
         :return: DataFrame
         """
-        path = "personal-capital/holdings/{}.csv".format(symbol)
+        path = "personalcapital/holdings/{}.csv".format(symbol)
         tmp = self._get_datalake_file(path=path)
         df = pd.read_csv(tmp,
                          index_col="timestamp",
@@ -131,10 +131,10 @@ class DataLake:
             index=self.date_range if date_range is None else date_range
         )
 
-        objs = self.client.Bucket(DATALAKE).objects.all()
-        for obj in filter(lambda obj: "personal-capital/holdings/" in obj.key, objs):
+        objs = self.client.Bucket(DATALAKE).objects.filter(Prefix="personalcapital/holdings/")
+        for obj in list(objs):
             # Simplify the s3 object path to just the stock symbol
-            simple_key = obj.key.replace("personal-capital/holdings/", "")
+            simple_key = obj.key.replace("personalcapital/holdings/", "")
             idx = simple_key.index(".")
             symbol = simple_key[:idx]
 
