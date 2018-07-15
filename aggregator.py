@@ -10,6 +10,7 @@ class Aggregator:
         if datalake_client is None:
             datalake_client = DataLake()
         self.datalake_client = datalake_client
+        self.holdings = None
 
     def get_date_range(self, start_date, end_date):
         """Define and Return the Pandas DateTimeIndex"""
@@ -17,7 +18,8 @@ class Aggregator:
         return date_range
 
     def build_portfolio(self, date_time_index):
-        symbols = list(self.get_holdings(date_time_index).columns.values)
+        self.holdings = self.get_holdings(date_time_index)
+        symbols = list(self.holdings.columns.values)
         cols = ['timestamp', 'close']
         df = self.get_starter_dataframe(date_time_index, cols)
         df = df.rename(columns={'close': 'SPY'})
@@ -60,15 +62,15 @@ class Aggregator:
     def calculate_position_values(self, df, date_time_index):
         """ TODO: Use the date_time_index from the incoming dataframe"""
         df = df.sort_index(ascending=False).drop(columns='SPY') # we dont have SPY holdings
-        holdings = self.get_holdings(date_time_index)
+        holdings = self.holdings if self.holdings is not None else self.get_holdings(date_time_index)
         result = df.mul(holdings)
         return result
 
     def calculate_allocation_percentages(self, df):
-        """To Revisit: Calculate based off Cash as well, not just investments"""
+        """TODO: Calculate based off Cash as well, not just investments"""
         df = df.sort_index(ascending=False).head(1)
         date_range = self.get_date_range(df.index[0], df.index[0])
-        holdings_df = self.get_holdings(date_range)
+        holdings_df = self.holdings if self.holdings is not None else self.get_holdings(date_range)
         test = df.mul(holdings_df)
         total_value = test.ix[0].sum()
         allocs = test.div(total_value, axis=1)
