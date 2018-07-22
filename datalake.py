@@ -1,10 +1,9 @@
+import datetime
 import logging
 import os
 
 import boto3
 import pandas as pd
-
-import datetime
 
 from utils import timing
 
@@ -103,7 +102,7 @@ class DataLake:
         return result_frame.join(df)
 
     @timing
-    def get_holding(self, symbol):
+    def get_holding(self, symbol, date_range=None):
         """
         Retrieves the holding data for a specific stock from the DataLake as a DataFrame.
 
@@ -117,7 +116,7 @@ class DataLake:
                          index_col="timestamp",
                          parse_dates=True,
                          na_values=["nan"])
-        result_frame = pd.DataFrame(index=self.date_range)
+        result_frame = pd.DataFrame(index=date_range if date_range is not None else self.date_range)
         return result_frame.join(df)
 
     @timing

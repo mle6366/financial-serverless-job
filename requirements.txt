@@ -1,4 +1,4 @@
-pandas==0.22.0
+pandas==0.23.3
 matplotlib==2.2.2
 tabulate==0.8.2
 # testing libs
