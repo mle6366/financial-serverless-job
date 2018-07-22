@@ -24,7 +24,7 @@ class TestDataLake(unittest.TestCase):
 
         symbol = "HELO"
 
-        dl = DataLake(date_range=self.date_range, client=mock_s3)
+        dl = DataLake(client=mock_s3)
         path = dl.get_stock_raw(symbol=symbol)
 
         exp_src_path = "alphavantage/{}/data.csv".format(symbol.upper())
@@ -39,7 +39,7 @@ class TestDataLake(unittest.TestCase):
         symbol = "NVDA"
 
         mock_s3 = MagicMock()
-        dl = DataLake(date_range=self.date_range, client=mock_s3)
+        dl = DataLake(client=mock_s3)
         dl.get_stock_raw = MagicMock(return_value="tests/data/{}.csv".format(symbol))
 
         df = dl.get_stock(symbol)
@@ -56,10 +56,10 @@ class TestDataLake(unittest.TestCase):
         exp_headers = ["high", "low"]
 
         mock_s3 = MagicMock()
-        dl = DataLake(date_range=self.date_range, client=mock_s3)
+        dl = DataLake(client=mock_s3)
         dl.get_stock_raw = MagicMock(return_value="tests/data/{}.csv".format(symbol))
 
-        df = dl.get_stock(symbol, ["timestamp", "high", "low"])
+        df = dl.get_stock(symbol, columns=["timestamp", "high", "low"])
 
         self.assertIsNotNone(df)
         dl.get_stock_raw.assert_called_once_with(symbol=symbol)
@@ -75,23 +75,22 @@ class TestDataLake(unittest.TestCase):
         ### Setup virtual S3 data ###
         conn = boto3.resource("s3", region_name="us-west-2")
         conn.create_bucket(Bucket=BUCKET)
-        hold = conn.Object(BUCKET, "personal-capital/holdings/{}.csv".format(symbol))
+        hold = conn.Object(BUCKET, "personalcapital/holdings/{}.csv".format(symbol))
         hold.put(Body=open("tests/data/holdings/{}.csv".format(symbol), "rb"))
 
-        dl = DataLake(date_range=self.date_range)
-        df = dl.get_holding(symbol=symbol)
+        dl = DataLake()
+        df = dl.get_holding(symbol=symbol, date_range=pd.date_range("2018-07-01", "2018-07-03"))
 
         self.assertIsNotNone(df)
         headers = list(df.columns.values)
         self.assertEqual(exp_headers, headers)
 
         # must be 3 rows and 1 column
-        self.assertEqual(4, df.values.shape[0])
+        self.assertEqual(3, df.values.shape[0])
         self.assertEqual(1, df.values.shape[1])
-        self.assertTrue(math.isnan(df.values[0, 0]))
+        self.assertEqual(float(10), df.values[0, 0])
         self.assertEqual(float(10), df.values[1, 0])
         self.assertEqual(float(10), df.values[2, 0])
-        self.assertEqual(float(10), df.values[3, 0])
 
     @mock_s3
     def test_get_holdings(self):
@@ -100,11 +99,11 @@ class TestDataLake(unittest.TestCase):
         conn.create_bucket(Bucket=BUCKET)
 
         for s in ["AMZN", "GOOG", "NVDA"]:
-            hold = conn.Object(BUCKET, "personal-capital/holdings/{}.csv".format(s))
+            hold = conn.Object(BUCKET, "personalcapital/holdings/{}.csv".format(s))
             hold.put(Body=open("tests/data/holdings/{}.csv".format(s), "rb"))
 
-        dl = DataLake(date_range=self.date_range)
-        df = dl.get_holdings(ascending=True)
+        dl = DataLake()
+        df = dl.get_holdings(date_range=self.date_range, ascending=True)
         self.assertIsNotNone(df)
 
         # must be 4 rows and 3 column
@@ -133,11 +132,11 @@ class TestDataLake(unittest.TestCase):
         conn.create_bucket(Bucket=BUCKET)
 
         for s in ["AMZN", "GOOG", "NVDA"]:
-            hold = conn.Object(BUCKET, "personal-capital/holdings/{}.csv".format(s))
+            hold = conn.Object(BUCKET, "personalcapital/holdings/{}.csv".format(s))
             hold.put(Body=open("tests/data/holdings/{}.csv".format(s), "rb"))
 
-        dl = DataLake(date_range=pd.date_range("2018-07-01", "2018-07-01"))
-        df = dl.get_holdings()
+        dl = DataLake()
+        df = dl.get_holdings(date_range=pd.date_range("2018-07-01", "2018-07-01"))
         self.assertIsNotNone(df)
 
         # must be 1 rows and 3 column

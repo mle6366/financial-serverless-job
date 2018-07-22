@@ -1,20 +1,21 @@
-import unittest
-import pandas as pd
-import math
-from unittest.mock import MagicMock
 import functools
+import math
+import unittest
+from unittest.mock import MagicMock
 
-from aggregator import Aggregator
+import pandas as pd
+
+from portfolio import Portfolio
 
 
-class TestAggregator(unittest.TestCase):
+class TestPortfolio(unittest.TestCase):
 
     def setUp(self):
         pass
 
     def get_dummy_holdings(self, date_time_index=None):
         df = pd.DataFrame(index=date_time_index)
-        df2 = pd.read_csv("data/holdings.csv",
+        df2 = pd.read_csv("tests/data/holdings.csv",
                           index_col='timestamp',
                           parse_dates=True,
                           na_values=['nan'])
@@ -25,21 +26,16 @@ class TestAggregator(unittest.TestCase):
     def get_dummy_stock(self, symbol, date_time_index, columns):
         default_range = pd.date_range('2018-05-04', '2018-04-01')
         df_start = pd.DataFrame(index=date_time_index if date_time_index is not None else default_range)
-        df = pd.read_csv("data/{}.csv".format(symbol),
+        df = pd.read_csv("tests/data/{}.csv".format(symbol),
                          index_col='timestamp',
                          parse_dates=True,
                          usecols=columns)
         return df_start.join(df)
 
     def get_dummy_starter_dataframe(self, date_time_index, cols):
-        """Returns a dataframe constrained by S&P500 trade days,
-                    thus omitting holidays/weekends"""
         return self.get_dummy_stock('SPY', date_time_index, cols).dropna()
 
     def get_dummy_composite_dataframe(self, date_time_index):
-        """Returns a dataframe constrained by S&P500 trade days, filled
-        with raw values of each stock in holdings (but not allocations or
-        position_values)"""
         symbols = list(self.get_dummy_holdings(date_time_index).columns.values)
         cols = ['timestamp', 'close']
         df = self.get_dummy_starter_dataframe(date_time_index, cols)
@@ -55,7 +51,7 @@ class TestAggregator(unittest.TestCase):
     def test_starter_dataframe(self):
         mock_client = MagicMock()
         mock_client.get_stock = self.get_dummy_stock
-        agg = Aggregator(mock_client)
+        agg = Portfolio(mock_client)
         s = '2017-12-11'
         e = '2018-04-29'
         cols = ['timestamp', 'open', 'close']
@@ -69,7 +65,7 @@ class TestAggregator(unittest.TestCase):
         s = '2018-03-31'
         e = '2018-05-04'
         date_range = pd.date_range(s, e)
-        agg = Aggregator(mock_client)
+        agg = Portfolio(mock_client)
         mock_client.get_holdings = self.get_dummy_holdings
         mock_client.get_stock = self.get_dummy_stock
         df = self.get_dummy_composite_dataframe(date_range)
@@ -98,7 +94,7 @@ class TestAggregator(unittest.TestCase):
         s = '2018-03-31'
         e = '2018-05-04'
         date_range = pd.date_range(s, e)
-        agg = Aggregator(mock_client)
+        agg = Portfolio(mock_client)
         mock_client.get_holdings = self.get_dummy_holdings
         mock_client.get_stock = self.get_dummy_stock
         result = agg.build_portfolio(date_range)
@@ -107,24 +103,22 @@ class TestAggregator(unittest.TestCase):
         exp_goog = 1048.2100 * 20
         exp_nvda = 239.0600 * 100
         exp_nxpi = 100.2800 * 10
-        expected_last = functools.reduce(lambda a, b: a+b, list([exp_amzn, exp_goog, exp_nvda, exp_nxpi]))
+        expected_last = functools.reduce(lambda a, b: a + b, list([exp_amzn, exp_goog, exp_nvda, exp_nxpi]))
         self.assertEqual(expected_last, result.tail(1).get('2018-05-04'))
 
     def test_cumulative_returns(self):
         mock_client = MagicMock()
         s = '2018-03-31'
-        e = '2018-05-04'
+        e = '2018-04-30'
         date_range = pd.date_range(s, e)
-        agg = Aggregator(mock_client)
+        agg = Portfolio(mock_client)
         mock_client.get_holdings = self.get_dummy_holdings
         mock_client.get_stock = self.get_dummy_stock
         result = agg.build_portfolio(date_range)
-        normalized = agg.normalize(result)
-        print("debug stop here")
 
-
-
-
-
-
-
+        expected_trade_days = 21  # trade days in april 2018
+        actual_trade_days = result.values.shape[0]
+        self.assertEqual(expected_trade_days, actual_trade_days)
+        self.assertEqual(1, result.values.ndim)  # portfolio is a series
+        self.assertEqual(50858.17999999999, result['2018-04-09'])
+        self.assertEqual(53282.380000000005, result['2018-04-30'])
