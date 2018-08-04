@@ -66,7 +66,7 @@ class DataLake:
 
         :return: path to csv file
         """
-        path = "alphavantage/{}/data.csv".format(symbol.upper())
+        path = "assets/{}/data.csv".format(symbol.upper())
         return self._get_datalake_file(path=path)
 
     @timing
@@ -92,6 +92,7 @@ class DataLake:
                              parse_dates=True,
                              na_values=["nan"],
                              usecols=columns)
+            print(df)
         else:
             df = pd.read_csv(output,
                              index_col="timestamp",
@@ -134,7 +135,7 @@ class DataLake:
         for obj in list(objs):
             # Simplify the s3 object path to just the stock symbol
             simple_key = obj.key.replace("personalcapital/holdings/", "")
-            idx = simple_key.index(".")
+            idx = simple_key.index(".csv")
             symbol = simple_key[:idx]
 
             logging.debug("getting holding for '{}'".format(symbol))
