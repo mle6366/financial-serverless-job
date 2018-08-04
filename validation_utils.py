@@ -14,7 +14,7 @@ class ValidationUtils:
         :return: boolean
         """
         if df.empty:
-            logging.error("{} : Aggregator.py:Cannot load Holdings for {}. "
+            logging.error("{} : Cannot load Holdings for {}. "
                           .format(time.asctime(time.localtime(time.time())),
                                   symbol if symbol is not None else "No Symbol Info"))
 
