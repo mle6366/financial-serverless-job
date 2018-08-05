@@ -1,6 +1,5 @@
 import boto3
 import unittest
-from unittest.mock import MagicMock
 from portfolio_client import PortfolioClient
 import pandas as pd
 
@@ -22,11 +21,5 @@ class TestPortfolioClient(unittest.TestCase):
     def test_s3_integration(self):
         s3 = boto3.client('s3', region_name='us-west-2')
         client = PortfolioClient(s3)
-        client.send_to_bucket(self.get_dummy_stock('NVDA', None))
-        print("stop here")
-
-    def test_s3_unit(self):
-        mock_s3 = MagicMock()
-        client = PortfolioClient(mock_s3)
         client.send_to_bucket(self.get_dummy_stock('NVDA', None))
         print("stop here")
