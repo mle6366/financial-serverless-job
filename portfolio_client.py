@@ -3,7 +3,7 @@ import botocore
 from io import BytesIO
 
 BUCKET = "expansellc-datalake"
-KEY = 'portfolio/portfolio.csv'
+KEY = "portfolio/portfolio.csv"
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -32,3 +32,14 @@ class PortfolioClient:
         else:
             logging.error("PortfolioClient : failed to send portfolio to"
                           "destination expansellc-datalake/portfolio/portfolio.csv.")
+
+    def get_portfolio_from_bucket(self):
+        """
+            Gets the existing portfolio from the bucket.
+            :return stream of bytes
+        """
+        if self.exists:
+            logging.info("PortfolioClient : attempting to get portfolio from "
+                         "src expansellc-datalake/portfolio/portfolio.csv.")
+            result = self.s3.get_object(Bucket=BUCKET, Key=KEY)
+            return result['Body'].read()
