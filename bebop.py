@@ -6,6 +6,8 @@ from portfolio import Portfolio
 from portfolio_client import PortfolioClient
 
 if __name__ == "__main__":
+
+    '''This will be replaced by the lambda function'''
     logging.basicConfig(level=INFO)
     s3 = boto3.client('s3', region_name='us-west-2')
 

@@ -39,6 +39,9 @@ class Portfolio:
         """
         self.holdings = self.__get_holdings(date_time_index)
         symbols = list(self.holdings.columns.values)
+        logging.info("{} || Portfolio || Preparing to build portfolio from the following "
+                     "symbols: {}"
+                     .format(time.asctime(time.localtime(time.time())), symbols))
         cols = ['timestamp', 'close']
         df = self.get_starter_dataframe(date_time_index, cols)
         df = df.rename(columns={'close': 'SPY'})
@@ -51,7 +54,9 @@ class Portfolio:
             df_tmp = self.datalake_client.get_stock(symbol, date_time_index, cols)
             if self.validation.is_invalid_dataframe(df_tmp, symbol):
                 logging.info("{} Dataframe is empty or otherwise invalid".format(symbol))
-                continue
+                raise RuntimeError("{} || Portfolio || Encountered invalid dataframe {} "
+                                   "while building portfolio. Short-circuiting."
+                                   .format(time.asctime(time.localtime(time.time())), symbol))
             df_tmp = df_tmp.rename(columns={'close': symbol})
             df = df.join(df_tmp)
         holdings_vals = self.calculate_position_values(df, date_time_index)
