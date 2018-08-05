@@ -84,7 +84,7 @@ class DataLake:
         """
         output = self.get_stock_raw(symbol=symbol)
         if output is None:
-            return output
+            return self.__create_empty_df(date_range)
 
         if columns is not None:
             df = pd.read_csv(output,
@@ -99,8 +99,11 @@ class DataLake:
                              parse_dates=True,
                              na_values=["nan"])
 
-        result_frame = pd.DataFrame(index=date_range if date_range is not None else self.date_range)
+        result_frame = self.__create_empty_df(date_range)
         return result_frame.join(df)
+
+    def __create_empty_df(self, date_range=None):
+        return pd.DataFrame(index=date_range if date_range is not None else self.date_range)
 
     @timing
     def get_holding(self, symbol, date_range=None):
