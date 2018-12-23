@@ -46,13 +46,14 @@ class DataLake:
         output = "/tmp/{}.datalake".format(path.replace("/", "_"))
 
         if os.path.isfile(output):
-            logging.debug("existing temp file '{}' was found, removing".format(output))
+            logging.debug(
+                "existing temp file '{}' was found, removing".format(output))
             os.remove(output)
 
         try:
             self.client.Bucket(DATALAKE).download_file(path, output)
         except Exception as err:
-            logging.error("encountered error with s3, %s".format(err))
+            logging.error("encountered error with s3, {}".format(err))
             return None
 
         return output
@@ -92,7 +93,6 @@ class DataLake:
                              parse_dates=True,
                              na_values=["nan"],
                              usecols=columns)
-            print(df)
         else:
             df = pd.read_csv(output,
                              index_col="timestamp",
@@ -120,7 +120,8 @@ class DataLake:
                          index_col="timestamp",
                          parse_dates=True,
                          na_values=["nan"])
-        result_frame = pd.DataFrame(index=date_range if date_range is not None else self.date_range)
+        result_frame = pd.DataFrame(
+            index=date_range if date_range is not None else self.date_range)
         return result_frame.join(df)
 
     @timing
@@ -134,7 +135,8 @@ class DataLake:
             index=self.date_range if date_range is None else date_range
         )
 
-        objs = self.client.Bucket(DATALAKE).objects.filter(Prefix="personalcapital/holdings/")
+        objs = self.client.Bucket(DATALAKE).objects.filter(
+            Prefix="personalcapital/holdings/")
         for obj in list(objs):
             # Simplify the s3 object path to just the stock symbol
             simple_key = obj.key.replace("personalcapital/holdings/", "")
@@ -142,7 +144,7 @@ class DataLake:
             symbol = simple_key[:idx]
 
             logging.debug("getting holding for '{}'".format(symbol))
-            df = self.get_holding(symbol=symbol)
+            df = self.get_holding(symbol=symbol, date_range=date_range)
 
             result_frame = result_frame.join(df)
 
