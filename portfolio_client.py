@@ -1,4 +1,3 @@
-import json
 import logging
 import botocore
 from io import BytesIO
@@ -32,6 +31,8 @@ class PortfolioClient:
             df_buffer.seek(0)
             try:
                 self.s3.upload_fileobj(df_buffer, BUCKET, KEY)
+                logging.info("PortfolioClient : presumably sent portfolio to "
+                             "destination {} {}".format(BUCKET, KEY))
             except botocore.exceptions.ClientError as e:
                 msg = e.response.get('Error', {}).get('Message', 'Could Not Retrieve Error Message')
                 logging.error("PortfolioClient BotocoreClientException sending portfolio "

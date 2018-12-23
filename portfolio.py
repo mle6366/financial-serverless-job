@@ -53,12 +53,13 @@ class Portfolio:
                          .format(time.asctime(time.localtime(time.time())), symbol))
             df_tmp = self.datalake_client.get_stock(symbol, date_time_index, cols)
             if self.validation.is_invalid_dataframe(df_tmp, symbol):
-                logging.info("{} Dataframe is empty or otherwise invalid".format(symbol))
+                logging.error("{} Dataframe is empty or otherwise invalid".format(symbol))
                 raise RuntimeError("{} || Portfolio || Encountered invalid dataframe {} "
                                    "while building portfolio. Short-circuiting."
                                    .format(time.asctime(time.localtime(time.time())), symbol))
             df_tmp = df_tmp.rename(columns={'close': symbol})
             df = df.join(df_tmp)
+        df.drop_duplicates(inplace=True)
         holdings_vals = self.calculate_position_values(df, date_time_index)
         portfolio_val = self.__calculate_total_portfolio_val(holdings_vals)
         return portfolio_val
@@ -129,6 +130,10 @@ class Portfolio:
 
     def __get_holdings(self, date_time_index):
         df = self.datalake_client.get_holdings(date_time_index)
-        self.validation.is_invalid_dataframe(df)
+        if self.validation.is_invalid_dataframe(df):
+            raise RuntimeError("{} || Portfolio || Encountered invalid dataframe"
+                               "while building portfolio - unable to get holdings."
+                               " Short-circuiting."
+                               .format(time.asctime(time.localtime(time.time()))))
         start_df = self.get_starter_dataframe(date_time_index, cols=['timestamp', 'close'])
         return start_df.join(df).drop(columns=['close'])
