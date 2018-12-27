@@ -2,13 +2,12 @@ import functools
 import math
 import unittest
 from unittest.mock import MagicMock
-
 import pandas as pd
 
 from portfolio import Portfolio
 
 
-class TestPortfolio(unittest.TestCase):
+class PortfolioTest(unittest.TestCase):
 
     def setUp(self):
         pass

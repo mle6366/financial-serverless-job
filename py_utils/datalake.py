@@ -1,11 +1,18 @@
+"""
+ Expanse, LLC
+ http://expansellc.io
+
+ Copyright 2018
+ Released under the Apache 2 license
+ https://www.apache.org/licenses/LICENSE-2.0
+
+ @authors Ryan Scott
+"""
 import datetime
 import logging
 import os
-
 import boto3
 import pandas as pd
-
-from utils import timing
 
 DATALAKE = "expansellc-datalake"
 
@@ -34,7 +41,6 @@ class DataLake:
         end = "{0:%Y-%m-%d}".format(now)
         self.date_range = pd.date_range(start, end)
 
-    @timing
     def _get_datalake_file(self, path):
         """
         Downloads a specific file from the DataLake based on the path.
@@ -58,7 +64,6 @@ class DataLake:
 
         return output
 
-    @timing
     def get_stock_raw(self, symbol):
         """
         Retrieves the data for a specific stock from the DataLake in raw file form.
@@ -70,7 +75,6 @@ class DataLake:
         path = "assets/{}/data.csv".format(symbol.upper())
         return self._get_datalake_file(path=path)
 
-    @timing
     def get_stock(self, symbol, date_range=None, columns=None):
         """
         Retrieves the data for a specific stock from the DataLake as a DataFrame.
@@ -105,7 +109,6 @@ class DataLake:
     def __create_empty_df(self, date_range=None):
         return pd.DataFrame(index=date_range if date_range is not None else self.date_range)
 
-    @timing
     def get_holding(self, symbol, date_range=None):
         """
         Retrieves the holding data for a specific stock from the DataLake as a DataFrame.
@@ -124,7 +127,6 @@ class DataLake:
             index=date_range if date_range is not None else self.date_range)
         return result_frame.join(df)
 
-    @timing
     def get_holdings(self, date_range=None, ascending=False):
         """
         Retrieves all holding data from the DataLake and joins as a single DataFrame.

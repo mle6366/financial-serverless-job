@@ -3,8 +3,8 @@ import time
 
 import pandas as pd
 
-from datalake import DataLake
-from validation_utils import ValidationUtils
+from py_utils.datalake import DataLake
+from py_utils.dataframe_util import DataframeUtil
 
 
 class Portfolio:
@@ -13,7 +13,7 @@ class Portfolio:
             datalake_client = DataLake()
         self.datalake_client = datalake_client
         self.holdings = None
-        self.validation = ValidationUtils()
+        self.validation = DataframeUtil()
 
     def get_date_range(self, start_date, end_date):
         """
@@ -39,8 +39,8 @@ class Portfolio:
         """
         self.holdings = self.__get_holdings(date_time_index)
         symbols = list(self.holdings.columns.values)
-        logging.info("{} || Portfolio || Preparing to build portfolio from the following "
-                     "symbols: {}"
+        logging.info('{} || Portfolio || Preparing to build portfolio from the following '
+                     'symbols: {}'
                      .format(time.asctime(time.localtime(time.time())), symbols))
         cols = ['timestamp', 'close']
         df = self.get_starter_dataframe(date_time_index, cols)
@@ -48,14 +48,14 @@ class Portfolio:
         for symbol in symbols:
             if symbol == 'timestamp' or symbol == 'SPY':
                 continue
-            logging.info("{} || Portfolio || "
-                         "Searching for Stock {}"
+            logging.info('{} || Portfolio || '
+                         'Searching for Stock {}'
                          .format(time.asctime(time.localtime(time.time())), symbol))
             df_tmp = self.datalake_client.get_stock(symbol, date_time_index, cols)
             if self.validation.is_invalid_dataframe(df_tmp, symbol):
-                logging.error("{} Dataframe is empty or otherwise invalid".format(symbol))
-                raise RuntimeError("{} || Portfolio || Encountered invalid dataframe {} "
-                                   "while building portfolio. Short-circuiting."
+                logging.error('{} Dataframe is empty or otherwise invalid'.format(symbol))
+                raise RuntimeError('{} || Portfolio || Encountered invalid dataframe {} '
+                                   'while building portfolio. Short-circuiting.'
                                    .format(time.asctime(time.localtime(time.time())), symbol))
             df_tmp = df_tmp.rename(columns={'close': symbol})
             df = df.join(df_tmp)
@@ -131,9 +131,9 @@ class Portfolio:
     def __get_holdings(self, date_time_index):
         df = self.datalake_client.get_holdings(date_time_index)
         if self.validation.is_invalid_dataframe(df):
-            raise RuntimeError("{} || Portfolio || Encountered invalid dataframe"
-                               "while building portfolio - unable to get holdings."
-                               " Short-circuiting."
+            raise RuntimeError('{} || Portfolio || Encountered invalid dataframe'
+                               'while building portfolio - unable to get holdings.'
+                               ' Short-circuiting.'
                                .format(time.asctime(time.localtime(time.time()))))
         start_df = self.get_starter_dataframe(date_time_index, cols=['timestamp', 'close'])
         return start_df.join(df).drop(columns=['close'])
