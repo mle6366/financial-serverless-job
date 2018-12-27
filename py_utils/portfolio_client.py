@@ -28,8 +28,8 @@ class PortfolioClient:
         except botocore.exceptions.ClientError as e:
             error_code = int(e.response['Error']['Code'])
             if error_code == 404:
-                logging.error("PortfolioClient: "
-                              "The {} bucket could not be found. ".format(BUCKET))
+                logging.error('PortfolioClient: '
+                              'The {} bucket could not be found. '.format(BUCKET))
                 self.exists = False
 
     def send_to_bucket(self, df):
