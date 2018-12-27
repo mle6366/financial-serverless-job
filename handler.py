@@ -13,11 +13,11 @@ Responsible for executing the portfolio builder.
 def run(event, context):
     logging.basicConfig(level=INFO)
     s = '2018-07-13'
-    e = "{0:%Y-%m-%d}".format(datetime.datetime.now())
+    e = '{0:%Y-%m-%d}'.format(datetime.datetime.now())
     s3 = boto3.client('s3', region_name='us-west-2')
 
-    logging.info("Executing Portfolio Job {} "
-                 "for Date Range {} - {}"
+    logging.info('Executing Portfolio Job {} '
+                 'for Date Range {} - {}'
                  .format(json.dumps(event, indent=2), s, e))
 
     portfolio = Portfolio()
