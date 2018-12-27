@@ -1,9 +1,20 @@
+"""
+ Expanse, LLC
+ http://expansellc.io
+
+ Copyright 2018
+ Released under the Apache 2 license
+ https://www.apache.org/licenses/LICENSE-2.0
+
+ @authors Meghan Erickson
+"""
 import logging
 import botocore
 from io import BytesIO
+import os
 
-BUCKET = "expansellc-datalake"
-KEY = "portfolio/portfolio.csv"
+BUCKET = os.environ['BUCKET']
+KEY = os.environ['KEY']
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -23,28 +34,28 @@ class PortfolioClient:
 
     def send_to_bucket(self, df):
         if self.exists:
-            logging.info("PortfolioClient : attempting to send portfolio to "
-                         "destination {} {}".format(BUCKET, KEY))
+            logging.info('PortfolioClient : attempting to send portfolio to '
+                         'destination {} {}'.format(BUCKET, KEY))
             df_buffer = BytesIO()
             df_buffer.write(b"timestamp,total\n")
             df_buffer.write(bytes(df.to_csv(), 'utf-8'))
             df_buffer.seek(0)
             try:
                 self.s3.upload_fileobj(df_buffer, BUCKET, KEY)
-                logging.info("PortfolioClient : presumably sent portfolio to "
-                             "destination {} {}".format(BUCKET, KEY))
+                logging.info('PortfolioClient : sent portfolio to '
+                             'destination {} {}'.format(BUCKET, KEY))
             except botocore.exceptions.ClientError as e:
                 msg = e.response.get('Error', {}).get('Message', 'Could Not Retrieve Error Message')
                 logging.error("PortfolioClient BotocoreClientException sending portfolio "
                               "to destination {} {}: {}"
                               .format(BUCKET, KEY, msg))
             except Exception as e:
-                logging.error("PortfolioClient Exception end portfolio to"
-                              "destination {} {}: {}"
+                logging.error('PortfolioClient Exception end portfolio to'
+                              'destination {} {}: {}'
                               .format(BUCKET, KEY, e))
         else:
-            logging.error("PortfolioClient : failed to send portfolio to"
-                          "destination {} {}".format(BUCKET, KEY))
+            logging.error('PortfolioClient : failed to send portfolio to'
+                          'destination {} {}'.format(BUCKET, KEY))
 
     def get_portfolio_from_bucket(self):
         """
@@ -52,10 +63,10 @@ class PortfolioClient:
             :return stream of bytes
         """
         if self.exists:
-            logging.info("PortfolioClient : attempting to get portfolio from "
-                         "src {} {}".format(BUCKET, KEY))
+            logging.info('PortfolioClient : attempting to get portfolio from '
+                         'src {} {}'.format(BUCKET, KEY))
             result = self.s3.get_object(Bucket=BUCKET, Key=KEY)
             return result['Body'].read()
         else:
-            logging.error("PortfolioClient : failed to get portfolio from"
-                          " src expansellc-datalake/portfolio/portfolio.csv.")
+            logging.error('PortfolioClient : failed to get portfolio from'
+                          ' src {} {}'.format(BUCKET, KEY))

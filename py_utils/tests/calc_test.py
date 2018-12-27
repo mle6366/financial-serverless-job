@@ -1,8 +1,9 @@
 import unittest
 import pandas as pd
-from calc_utils import CalcUtils
+from calc import Calc
 
-class TestCalcUtils(unittest.TestCase):
+
+class CalcTest(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -10,7 +11,7 @@ class TestCalcUtils(unittest.TestCase):
     def get_dummy_stock(self, symbol, date_time_index):
         default_range = pd.date_range('2018-04-30', '2018-04-01')
         df_start = pd.DataFrame(index=date_time_index if date_time_index is not None else default_range)
-        df = pd.read_csv("tests/data/{}.csv".format(symbol),
+        df = pd.read_csv("tests/data/calc/{}.csv".format(symbol),
                          index_col='timestamp',
                          parse_dates=True,
                          usecols=['timestamp', 'close'])
@@ -20,17 +21,17 @@ class TestCalcUtils(unittest.TestCase):
         start = '2018-04-01'
         end = '2018-04-30'
         df = self.get_dummy_stock('SPY', pd.date_range(start, end)).dropna()
-        df2 = pd.read_csv("tests/data/{}.csv".format(filepath),
+        df2 = pd.read_csv("tests/data/calc/{}.csv".format(filepath),
                           index_col='timestamp',
                           parse_dates=True,
                           na_values=['nan'])
         df = df.join(df2).drop(columns='close')
-        df.sort_index(ascending=True, inplace=True) # this is how Ryans datalake client does it
+        df.sort_index(ascending=True, inplace=True)
         return df
 
     def test_calculate_daily_returns(self):
         single_portfolio_item = "portfolio"
-        utils = CalcUtils()
+        utils = Calc()
         portfolio = self.get_dummy_portfolio(single_portfolio_item)
         result = utils.get_daily_returns(portfolio)
 
@@ -55,7 +56,7 @@ class TestCalcUtils(unittest.TestCase):
 
     def test_calculate_daily_returns_multiple_values(self):
         many_portfolio_items = "portfolio_multiple"
-        utils = CalcUtils()
+        utils = Calc()
         portfolio = self.get_dummy_portfolio(many_portfolio_items)
         result = utils.get_daily_returns(portfolio)
 
@@ -75,7 +76,7 @@ class TestCalcUtils(unittest.TestCase):
 
     def test_normalize(self):
         many_portfolio_items = "portfolio_multiple"
-        utils = CalcUtils()
+        utils = Calc()
         portfolio = self.get_dummy_portfolio(many_portfolio_items)
         result = utils.normalize(portfolio)
 

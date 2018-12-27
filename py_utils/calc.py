@@ -1,7 +1,14 @@
-import pandas as pd
+"""
+ Expanse, LLC
+ http://expansellc.io
 
+ Copyright 2018
+ Released under the Apache 2 license
+ https://www.apache.org/licenses/LICENSE-2.0
 
-class CalcUtils:
+ @authors Meghan Erickson
+"""
+class Calc:
 
     def normalize(self, df):
         """

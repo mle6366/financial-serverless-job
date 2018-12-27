@@ -15,3 +15,9 @@ ifneq ($(wildcard tests),)
 else
 	@echo "Did not find any tests . . ."
 endif
+	cd py_utils/; \
+	../.venv/bin/python3 -m pytest --capture=no tests
+
+deploy: test
+	npm install
+	serverless deploy

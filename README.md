@@ -1,28 +1,56 @@
 # README #
 
-The Path to Bebop: Financial Portfolio Planning & Management Tools. 
+Financial Portfolio Planning & Management Tools. 
 
-### What is this repository for? ###
+This AWS Lambda function is responsible for building the portfolio from current holdings data stored in s3.
 
+
+## Summary
+
+This is one component of a larger, on-going financial data project. 
+The larger project leverages multiple interconnected serverless components deployed in AWS. 
+
+This portfolio function is deployed via the [serverless](https://serverless.com/framework/) framework and is scheduled to
+execute at an interval via [Cloudwatch Events Scheduler](https://docs.aws.amazon.com/lambda/latest/dg/with-scheduled-events.html). 
+(See serverless.yml line 83 for Event Scheduler)
+
+Logging and errors can be view in Cloudwatch.
+
+## Technologies
 * Python 3
-* Version 1.0.0
+* [Pandas](https://pandas.pydata.org/), [NumPy](http://www.numpy.org/)
+* [Serverless Framework](https://serverless.com/framework/)
+* AWS Lambda 
+* [Cloudwatch Events Scheduler](https://docs.aws.amazon.com/lambda/latest/dg/with-scheduled-events.html)
 
-### How do I get set up? ###
+* Dependencies and Prerequisites: 
+    * python 3
+    * node version 8
+    * valid AWS creds located in `~/.aws/credentials`. Checkout out this project's serverless.yml for roles.
+ 
+## How do I get set up? ##
 
 ```
-git clone https://meghane@bitbucket.org/meghane/the_path_to_bebop.git
-cd the_path_to_bebop
+npm i -g serverless
+
+sls plugin install -n serverless-python-requirements
+
+cd {project-directory}
 make
 
 ```
-* Dependencies: 
-    * python 3
-* Database configuration
+
+    
 * How to run tests
     ```bash
     make clean init test
     ```
 * Deployment instructions
+```bash
+
+make deploy
+
+```
 
 ### Contribution guidelines ###
 
@@ -32,8 +60,3 @@ make
 * Code review
     * All changes are incorporated into `master` via a pull request
 * Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact

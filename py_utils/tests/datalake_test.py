@@ -11,7 +11,7 @@ from datalake import DataLake
 BUCKET = "expansellc-datalake"
 
 
-class TestDataLake(unittest.TestCase):
+class DataLakeTest(unittest.TestCase):
     def setUp(self):
         self.date_range = pd.date_range("2018-06-30", "2018-07-3")
 
@@ -27,8 +27,8 @@ class TestDataLake(unittest.TestCase):
         dl = DataLake(client=mock_s3)
         path = dl.get_stock_raw(symbol=symbol)
 
-        exp_src_path = "alphavantage/{}/data.csv".format(symbol.upper())
-        exp_dst_path = "/tmp/alphavantage_{}_data.csv.datalake".format(symbol)
+        exp_src_path = "assets/{}/data.csv".format(symbol.upper())
+        exp_dst_path = "/tmp/assets_{}_data.csv.datalake".format(symbol)
         exp_bucket = BUCKET
 
         self.assertEqual(exp_dst_path, path)
@@ -40,7 +40,7 @@ class TestDataLake(unittest.TestCase):
 
         mock_s3 = MagicMock()
         dl = DataLake(client=mock_s3)
-        dl.get_stock_raw = MagicMock(return_value="tests/data/{}.csv".format(symbol))
+        dl.get_stock_raw = MagicMock(return_value="tests/data/datalake/{}.csv".format(symbol))
 
         df = dl.get_stock(symbol)
 
@@ -57,7 +57,7 @@ class TestDataLake(unittest.TestCase):
 
         mock_s3 = MagicMock()
         dl = DataLake(client=mock_s3)
-        dl.get_stock_raw = MagicMock(return_value="tests/data/{}.csv".format(symbol))
+        dl.get_stock_raw = MagicMock(return_value="tests/data/datalake/{}.csv".format(symbol))
 
         df = dl.get_stock(symbol, columns=["timestamp", "high", "low"])
 
@@ -76,7 +76,7 @@ class TestDataLake(unittest.TestCase):
         conn = boto3.resource("s3", region_name="us-west-2")
         conn.create_bucket(Bucket=BUCKET)
         hold = conn.Object(BUCKET, "personalcapital/holdings/{}.csv".format(symbol))
-        hold.put(Body=open("tests/data/holdings/{}.csv".format(symbol), "rb"))
+        hold.put(Body=open("tests/data/datalake/holdings/{}.csv".format(symbol), "rb"))
 
         dl = DataLake()
         df = dl.get_holding(symbol=symbol, date_range=pd.date_range("2018-07-01", "2018-07-03"))
@@ -100,7 +100,7 @@ class TestDataLake(unittest.TestCase):
 
         for s in ["AMZN", "GOOG", "NVDA"]:
             hold = conn.Object(BUCKET, "personalcapital/holdings/{}.csv".format(s))
-            hold.put(Body=open("tests/data/holdings/{}.csv".format(s), "rb"))
+            hold.put(Body=open("tests/data/datalake/holdings/{}.csv".format(s), "rb"))
 
         dl = DataLake()
         df = dl.get_holdings(date_range=self.date_range, ascending=True)
@@ -133,7 +133,7 @@ class TestDataLake(unittest.TestCase):
 
         for s in ["AMZN", "GOOG", "NVDA"]:
             hold = conn.Object(BUCKET, "personalcapital/holdings/{}.csv".format(s))
-            hold.put(Body=open("tests/data/holdings/{}.csv".format(s), "rb"))
+            hold.put(Body=open("tests/data/datalake/holdings/{}.csv".format(s), "rb"))
 
         dl = DataLake()
         df = dl.get_holdings(date_range=pd.date_range("2018-07-01", "2018-07-01"))
