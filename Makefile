@@ -11,7 +11,9 @@ init:
 
 test:
 ifneq ($(wildcard tests),)
+	unlink utils; ln -s ../utils .
 	.venv/bin/python3 -m pytest tests/
+	unlink utils
 else
 	@echo "Did not find any tests . . ."
 endif
